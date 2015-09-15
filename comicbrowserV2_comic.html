@@ -1,0 +1,10 @@
+<div class="container-fluid">
+  <div class="row" ng-controller="GetComicList as getCList">
+    <div class="col-xs-4 col-md-1" ng-repeat="comic in getCList.comicList">
+      <a ng-href="#/comic/{{comic.tid}}" class="btn">
+        <p class="text-center">{{comic.name}}</p>
+        <img ng-src="http://mh.sfacg.com/Logo/{{(comic.icon==null)?comic.tid:comic.icon}}.jpg" alt="" class="img-thumbnail center-block">
+      </a>
+    </div>
+  </div>
+</div>

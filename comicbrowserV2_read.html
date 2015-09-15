@@ -1,0 +1,12 @@
+<div class="container-fluid">
+  <div class="row" ng-controller="GetImageList as getIList">
+    <div class="col-xs-12 col-md-12">
+      <img class="img-responsive center-block" ng-src="{{img.url}}" ng-show="getIList.isMobile() || (getIList.nowImage === img.pid)" ng-repeat="img in getIList.imgList" ng-style="style()" resize />
+    </div>
+  </div>
+</div>
+<div class="btn-group btn-group-justified" role="group" ng-controller="BindButtonEvents as buttonEvts">
+  <a class="btn btn-info" ng-click="buttonEvts.PrevKai()">上一回</a>
+  <a ng-href="#/comic/{{buttonEvts.GetTid()}}" class="btn btn-default">{{buttonEvts.GetNowKai()}}</a>
+  <a class="btn btn-warning" ng-click="buttonEvts.NextKai()">下一回</a>
+</div>
