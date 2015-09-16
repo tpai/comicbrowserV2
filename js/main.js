@@ -2,52 +2,73 @@
 
 	angular.module("comicBrowser", ['ngRoute'])
 
-	.factory("CtrlImageView", function($rootScope) {
+	.factory("CtrlImageView", ['$rootScope', '$location', function($rootScope, $location) {
 		var viewService = {};
+		viewService.tid = "";
+		viewService.cid = "";
 		viewService.nowKai = "";
 		viewService.prevKai = "";
 		viewService.nextKai = "";
-    viewService.nowImage = 1;
+		viewService.nowImage = 1;
 		viewService.totalImgs = 0;
 
 		viewService.PrevPage = function() {
 			if (this.nowImage > 1)this.nowImage --;
 			else alert("這是第一頁");
-      this.ChangeImage();
-    };
+			this.ChangeImage();
+		};
 
-    viewService.NextPage = function() {
-      if (this.nowImage < this.totalImgs)this.nowImage ++;
+		viewService.NextPage = function() {
+			if (this.nowImage < this.totalImgs)this.nowImage ++;
 			else alert("這是最後一頁");
-      this.ChangeImage();
-    };
+			this.ChangeImage();
+		};
 
-    viewService.ChangeImage = function() {
-      $rootScope.$broadcast('ChangeImage');
-    };
+		viewService.ChangeImage = function() {
+			$rootScope.$broadcast('ChangeImage');
+		};
 
-    return viewService;
-	})
+		viewService.PrevKai = function() {
+			if (this.prevKai == null) {
+				alert("這是第一回");
+				return null
+			}
+			this.nowImage = 1;
+			this.totalImgs = 0;
+			$location.path("/comic/"+this.tid+"/"+this.cid+"/"+this.prevKai);
+		};
 
-	.controller("BindKeyEvents", ['$scope', '$routeParams', '$location', 'CtrlImageView', function($scope, $routeParams, $location, imageView) {
-		var controller = this;
+		viewService.NextKai = function() {
+			if (this.nextKai == null) {
+				alert("這是最後一回");
+				return null
+			}
+			this.nowImage = 1;
+			this.totalImgs = 0;
+			$location.path("/comic/"+this.tid+"/"+this.cid+"/"+this.nextKai);
+		};
+
+		viewService.KaiList = function() {
+			$location.path("/comic/"+this.tid);
+		};
+
+		return viewService;
+	}])
+
+	.controller("BindKeyEvents", ['$scope', 'CtrlImageView', function($scope, imageView) {
 		$scope.onKeyDown = function($event) {
 
 			if ($event.ctrlKey) {
 				if ($event.keyCode == 37) {
-					imageView.nowImage = 1;
-					imageView.totalImgs = 0;
-					$location.path("/comic/"+$routeParams.tid+"/"+$routeParams.cid+"/"+imageView.prevKai);
+					imageView.PrevKai();
 				}
 				if ($event.keyCode == 39) {
-					imageView.nowImage = 1;
-					imageView.totalImgs = 0;
-					$location.path("/comic/"+$routeParams.tid+"/"+$routeParams.cid+"/"+imageView.nextKai);
+					imageView.NextKai();
 				}
 			}
 			else {
 				if ($event.keyCode == 27) {
-					$location.path("/comic/"+$routeParams.tid);
+					imageView.KaiList ();
 				}
 				if ($event.keyCode == 37) {
 					imageView.PrevPage ();
@@ -59,19 +80,11 @@
 		};
 	}])
 
-	.controller("BindButtonEvents", ['$routeParams', '$location', 'CtrlImageView', function($routeParams, $location, imageView) {
-		this.GetTid = function() { return $routeParams.tid; }
+	.controller("BindButtonEvents", ['CtrlImageView', function(imageView) {
+		this.GetTid = function() { return imageView.tid; }
 		this.GetNowKai = function() { return imageView.nowKai; };
-		this.NextKai = function() {
-			imageView.nowImage = 1;
-			imageView.totalImgs = 0;
-			$location.path("/comic/"+$routeParams.tid+"/"+$routeParams.cid+"/"+imageView.nextKai);
-		};
-		this.PrevKai = function() {
-			imageView.nowImage = 1;
-			imageView.totalImgs = 0;
-			$location.path("/comic/"+$routeParams.tid+"/"+$routeParams.cid+"/"+imageView.prevKai);
-		};
+		this.NextKai = function() { imageView.NextKai(); };
+		this.PrevKai = function() { imageView.PrevKai(); };
 	}])
 
 	.controller("GetComicList", function($http) {
@@ -129,6 +142,8 @@
 		else {
 			kid = $routeParams.kid;
 		}
+		imageView.tid = tid;
+		imageView.cid = cid;
 		imageView.nowKai = kid;
 
 		var url = "http://whateverorigin.org/get?url="+encodeURIComponent("http://comic.sfacg.com/Utility/"+cid+"/"+((pre!=null)?pre+"/":"")+kid+".js")+"&callback=?";
@@ -167,6 +182,31 @@
 		};
 	}])
 
+	.directive("resize", function ($window) {
+		return function (scope, element) {
+			var w = angular.element($window);
+			scope.getWindowDimensions = function () {
+				return {
+					'h': w.height()
+				};
+			};
+			scope.$watch(scope.getWindowDimensions, function (newValue, oldValue) {
+				scope.windowHeight = newValue.h;
+
+				scope.style = function () {
+						return {
+							'height': (newValue.h - 70) + 'px'
+						};
+				};
+
+			}, true);
+
+			w.bind('resize', function () {
+				scope.$apply();
+			});
+		}
+	})
+
 	.config(function($routeProvider) {
 		$routeProvider
 		.when("/", {
@@ -179,30 +219,6 @@
 			templateUrl: "comicbrowserV2_read.html",
 			controller: "BindKeyEvents"
 		})
-	})
-
-	.directive("resize", function ($window) {
-	    return function (scope, element) {
-	      var w = angular.element($window);
-	      scope.getWindowDimensions = function () {
-	        return {
-	          'h': w.height()
-	        };
-	      };
-	      scope.$watch(scope.getWindowDimensions, function (newValue, oldValue) {
-	      	scope.windowHeight = newValue.h;
-
-	        scope.style = function () {
-	            return {
-	              'height': (newValue.h - 70) + 'px'
-	            };
-	        };
-
-	    	}, true);
-
-	      w.bind('resize', function () {
-	        scope.$apply();
-	      });
-	  }
 	});
+	
 })();
