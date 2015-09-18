@@ -14,7 +14,10 @@
 		return loadingIcon;
 	})
 
-	.factory("CtrlImageView", ['$rootScope', '$location', function($rootScope, $location) {
+	.factory("CtrlImageView",
+	['$rootScope', '$location',
+	function($rootScope, $location) {
+
 		var viewService = {};
 		viewService.tid = "";
 		viewService.cid = "";
@@ -45,8 +48,7 @@
 				alert("這是第一回");
 				return null
 			}
-			this.nowImage = 1;
-			this.totalImgs = 0;
+			this.ResetIndex ();
 			$location.path("/comic/"+this.tid+"/"+this.cid+"/"+this.prevKai);
 		};
 
@@ -55,8 +57,7 @@
 				alert("這是最後一回");
 				return null
 			}
-			this.nowImage = 1;
-			this.totalImgs = 0;
+			this.ResetIndex ();
 			$location.path("/comic/"+this.tid+"/"+this.cid+"/"+this.nextKai);
 		};
 
@@ -64,10 +65,17 @@
 			$location.path("/comic/"+this.tid);
 		};
 
+		viewService.ResetIndex = function () {
+			this.nowImage = 1;
+			this.totalImgs = 0;
+		};
+
 		return viewService;
 	}])
 
-	.controller("BindKeyEvents", ['$scope', 'CtrlImageView', function($scope, imageView) {
+	.controller("BindKeyEvents",
+	['$scope', 'CtrlImageView',
+	function($scope, imageView) {
 		$scope.onKeyDown = function($event) {
 
 			if ($event.ctrlKey) {
@@ -79,7 +87,7 @@
 				}
 			}
 			else {
-				if ($event.keyCode == 27) {
+				if ($event.keyCode == 27 || $event.keyCode == 36) {
 					imageView.KaiList ();
 				}
 				if ($event.keyCode == 37) {
@@ -92,16 +100,21 @@
 		};
 	}])
 
-	.controller("BindButtonEvents", ['CtrlImageView', function(imageView) {
+	.controller("BindButtonEvents",
+	['CtrlImageView',
+	function(imageView) {
 		this.GetTid = function() { return imageView.tid; }
 		this.GetNowKai = function() { return imageView.nowKai; };
 		this.NextKai = function() { imageView.NextKai(); };
 		this.PrevKai = function() { imageView.PrevKai(); };
 	}])
 
-	.controller("GetComicList", ['$http', 'CtrlLoadingIcon', function($http, loadingIcon) {
+	.controller("GetComicList",
+	['$http', 'CtrlImageView', 'CtrlLoadingIcon',
+	function($http, imageView, loadingIcon) {
 		var controller = this;
 
+		imageView.ResetIndex ();
 		loadingIcon.Show(true);
 
 		$http.get("/comicbrowserV2/js/comic.txt")
@@ -115,11 +128,15 @@
 			});
 	}])
 
-	.controller("GetKaiList", ['$scope', '$http', '$routeParams', 'CtrlLoadingIcon', function($scope, $http, $routeParams, loadingIcon) {
+	.controller("GetKaiList",
+	['$scope', '$http', '$routeParams',
+	'CtrlImageView', 'CtrlLoadingIcon',
+	function($scope, $http, $routeParams, imageView, loadingIcon) {
 		var controller = this;
 		var kaiArr = [];
 		var tid = $routeParams.tid;
 
+		imageView.ResetIndex ();
 		loadingIcon.Show(true);
 
 		var url = "http://whateverorigin.org/get?url="+encodeURIComponent("http://comic.sfacg.com/HTML/"+tid+"/")+"&callback=?";
@@ -153,14 +170,21 @@
 		});
 	}])
 
-	.controller("GetImageList", [ '$scope', '$http', '$routeParams', 'CtrlImageView', 'CtrlLoadingIcon', function($scope, $http, $routeParams, imageView, loadingIcon) {
+	.controller("GetImageList",
+	[ '$scope', '$http', '$routeParams',
+	'CtrlImageView', 'CtrlLoadingIcon',
+	function($scope, $http, $routeParams, imageView, loadingIcon) {
 		var controller = this;
 		var imgArr = [];
 
 		var tid = $routeParams.tid;
 		var cid = $routeParams.cid;
 		var pre, kid;
-		if ($routeParams.kid.split("-").length == 2) {
+		if ($routeParams.kid.split("-").length == 3) {
+			pre = $routeParams.kid.split("-")[0];
+			kid = $routeParams.kid.split("-")[1] + "-" + $routeParams.kid.split("-")[2];
+		}
+		else if ($routeParams.kid.split("-").length == 2) {
 			pre = $routeParams.kid.split("-")[0];
 			kid = $routeParams.kid.split("-")[1];
 		}
@@ -211,7 +235,9 @@
 		};
 	}])
 
-	.controller("LoadingIcon", ['$scope', 'CtrlLoadingIcon', function($scope, loadingIcon) {
+	.controller("LoadingIcon",
+	['$scope', 'CtrlLoadingIcon',
+	function($scope, loadingIcon) {
 		var controller = this;
 		controller.show = true;
 		$scope.$on("SetLoadingStatus", function() {
