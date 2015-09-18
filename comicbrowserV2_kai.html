@@ -1,6 +1,6 @@
 <div class="container-fluid">
   <div class="row" ng-controller="GetKaiList as getKList">
-    <div class="col-xs-4 col-md-1" ng-repeat="kai in getKList.kaiList" style="padding: 2px;">
+    <div class="col-xs-4 col-sm-3 col-md-2 col-lg-1" ng-repeat="kai in getKList.kaiList" style="padding: 2px;">
       <a ng-href="#/comic/{{getKList.tid}}/{{kai.cid}}/{{(kai.pkid==null)?kai.kid:kai.pkid}}" class="btn btn-default btn-block center-block">{{kai.text}}</a>
     </div>
   </div>
