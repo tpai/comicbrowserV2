@@ -5,10 +5,35 @@
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<title>漫畫瀏覽器</title>
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+		<style media="screen">
+		.loading {
+			width: 400px;
+			height: 400px;
+			text-align: center;
+			margin: 0 auto;
+		}
+
+		.loading:before {
+			content: '';
+			display: inline-block;
+			vertical-align: middle ;
+			height: 100%;
+		}
+
+		.loading-icon {
+			display: inline-block;
+			vertical-align: middle;
+			width: 120px;
+			height: 120px;
+		}
+		</style>
 	</head>
 	<body ng-controller="BindKeyEvents" ng-keydown="onKeyDown($event)">
 		<div class="btn-group btn-group-justified" role="group">
 			<a href="#/" class="btn btn-primary">漫畫列表</a>
+		</div>
+		<div class="loading" ng-controller="LoadingIcon as loading" ng-show="loading.show" ng-style="style()" resize>
+			<img class="loading-icon" src="img/hourglass.svg" ng-style="style()" resize />
 		</div>
 		<div ng-view></div>
 		<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>

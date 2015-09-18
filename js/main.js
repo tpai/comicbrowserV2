@@ -2,6 +2,18 @@
 
 	angular.module("comicBrowser", ['ngRoute'])
 
+	.factory("CtrlLoadingIcon", function($rootScope) {
+		var loadingIcon = {};
+		loadingIcon.show = false;
+
+		loadingIcon.Show = function (value) {
+			loadingIcon.show = value;
+			$rootScope.$broadcast('SetLoadingStatus');
+		};
+
+		return loadingIcon;
+	})
+
 	.factory("CtrlImageView", ['$rootScope', '$location', function($rootScope, $location) {
 		var viewService = {};
 		viewService.tid = "";
@@ -87,17 +99,28 @@
 		this.PrevKai = function() { imageView.PrevKai(); };
 	}])
 
-	.controller("GetComicList", function($http) {
+	.controller("GetComicList", ['$http', 'CtrlLoadingIcon', function($http, loadingIcon) {
 		var controller = this;
-		$http.get("/comicbrowserV2/js/comic.txt")
-			.success(function(data) { controller.comicList = data; })
-			.error(function(err) { console.log(err); });
-	})
 
-	.controller("GetKaiList", function($scope, $http, $routeParams) {
+		loadingIcon.Show(true);
+
+		$http.get("/comicbrowserV2/js/comic.txt")
+			.success(function(data) {
+				controller.comicList = data;
+
+				loadingIcon.Show(false);
+			})
+			.error(function(err) {
+				console.log(err);
+			});
+	}])
+
+	.controller("GetKaiList", ['$scope', '$http', '$routeParams', 'CtrlLoadingIcon', function($scope, $http, $routeParams, loadingIcon) {
 		var controller = this;
 		var kaiArr = [];
 		var tid = $routeParams.tid;
+
+		loadingIcon.Show(true);
 
 		var url = "http://whateverorigin.org/get?url="+encodeURIComponent("http://comic.sfacg.com/HTML/"+tid+"/")+"&callback=?";
 		$.getJSON(url, function(result) {
@@ -122,13 +145,15 @@
 					$scope.$apply(function(){
 						controller.kaiList = kaiArr;
 						controller.tid = tid;
+
+						loadingIcon.Show(false);
 					});
 				}
 			});
 		});
-	})
+	}])
 
-	.controller("GetImageList", [ '$scope', '$http', '$routeParams', 'CtrlImageView', function($scope, $http, $routeParams, imageView) {
+	.controller("GetImageList", [ '$scope', '$http', '$routeParams', 'CtrlImageView', 'CtrlLoadingIcon', function($scope, $http, $routeParams, imageView, loadingIcon) {
 		var controller = this;
 		var imgArr = [];
 
@@ -145,6 +170,8 @@
 		imageView.tid = tid;
 		imageView.cid = cid;
 		imageView.nowKai = kid;
+
+		loadingIcon.Show(true);
 
 		var url = "http://whateverorigin.org/get?url="+encodeURIComponent("http://comic.sfacg.com/Utility/"+cid+"/"+((pre!=null)?pre+"/":"")+kid+".js")+"&callback=?";
 		$.getJSON(url, function(result) {
@@ -165,6 +192,8 @@
 						controller.nowImage = 1;
 						controller.imgList = imgArr;
 						controller.tid = tid;
+
+						loadingIcon.Show(false);
 					});
 				}
 			});
@@ -180,6 +209,14 @@
 			else
 				return false;
 		};
+	}])
+
+	.controller("LoadingIcon", ['$scope', 'CtrlLoadingIcon', function($scope, loadingIcon) {
+		var controller = this;
+		controller.show = true;
+		$scope.$on("SetLoadingStatus", function() {
+			controller.show = loadingIcon.show;
+		});
 	}])
 
 	.directive("resize", function ($window) {
@@ -220,5 +257,5 @@
 			controller: "BindKeyEvents"
 		})
 	});
-	
+
 })();
